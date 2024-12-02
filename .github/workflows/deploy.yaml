@@ -1,18 +1,37 @@
-name: Deploy to Kubernetes
+name: Deploy Node.js Application
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger on push to main branch
+  pull_request:
+    branches:
+      - main  # Trigger on PR to main branch
 
 jobs:
-  deploy:
-    runs-on: self-hosted
+  build-and-deploy:
+    runs-on: [self-hosted, windows]  # Using the self-hosted runner
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Node.js Docker image
+        run: |
+          docker build -t node-app .
+
+      - name: Set up kubectl
+        run: |
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/windows/amd64/kubectl.exe
+          mv kubectl.exe C:\Windows\System32
 
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f deployment.yaml
-          kubectl rollout status deployment/my-app
+          
+      - name: Verify deployment
+        run: |
+          kubectl get pods
