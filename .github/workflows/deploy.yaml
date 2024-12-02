@@ -34,7 +34,7 @@ jobs:
     - name: Set up kubectl
       run: |
         echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
-        $env:KUBECONFIG=$(pwd)/kubeconfig.yaml
+        $env:KUBECONFIG=$(Join-Path (pwd) "kubeconfig.yaml")
         kubectl version --client
 
     - name: Update Kubernetes Deployment
