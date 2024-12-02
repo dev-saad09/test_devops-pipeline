@@ -3,7 +3,7 @@ name: Deploy Node.js App
 on:
   push:
     branches:
-      - main  # Change this to your desired branch
+      - main
 
 jobs:
   build_and_deploy:
@@ -18,16 +18,30 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t node-app .
+        IMAGE_TAG=$(git rev-parse --short HEAD)
+        docker build -t node-app:$IMAGE_TAG .
+
+    - name: Login to Docker Hub
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Push Docker image
+      run: |
+        IMAGE_TAG=$(git rev-parse --short HEAD)
+        docker tag node-app:$IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/node-app:$IMAGE_TAG
+        docker push ${{ secrets.DOCKER_USERNAME }}/node-app:$IMAGE_TAG
 
     - name: Set up kubectl
-      uses: azure/setup-kubectl@v1
-      with:
-        kubeconfig: ${{ secrets.KUBECONFIG }}  # Store your kubeconfig file as a secret
-
-    - name: Apply Kubernetes Deployment
       run: |
-        kubectl apply -f deployment.yaml
+        echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+        export KUBECONFIG=$(pwd)/kubeconfig.yaml
+        kubectl version --client
 
+    - name: Update Kubernetes Deployment
+      run: |
+        IMAGE_TAG=$(git rev-parse --short HEAD)
+        kubectl set image deployment/node-app-deployment node-app=${{ secrets.DOCKER_USERNAME }}/node-app:$IMAGE_TAG
 
-        
+    - name: Verify deployment
+      run: |
+        kubectl get pods -o wide
