@@ -21,7 +21,7 @@ jobs:
         docker build -t node-app .
 
     - name: Set up kubectl
-      uses: azure/setup-kubectl@v2
+      uses: azure/setup-kubectl@v1
       with:
         kubeconfig: ${{ secrets.KUBECONFIG }}  # Store your kubeconfig file as a secret
 
