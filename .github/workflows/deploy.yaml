@@ -1,0 +1,27 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image locally
+        run: |
+          docker build -t node-app:latest .
+
+      - name: Load Docker image into Kubernetes node
+        run: |
+          kind load docker-image node-app:latest
+
+      - name: Update Kubernetes deployment
+        run: |
+          kubectl set image deployment/node-app node-app=node-app:latest
+          kubectl rollout status deployment/node-app
