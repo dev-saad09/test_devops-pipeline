@@ -18,8 +18,8 @@ jobs:
 
     - name: Build Docker image
       run: |
-        IMAGE_TAG=$(git rev-parse --short HEAD)
-        docker build -t node-app:$IMAGE_TAG .
+        $env:IMAGE_TAG=$(git rev-parse --short HEAD)
+        docker build -t node-app:$env:IMAGE_TAG .
 
     - name: Login to Docker Hub
       run: |
@@ -27,20 +27,20 @@ jobs:
 
     - name: Push Docker image
       run: |
-        IMAGE_TAG=$(git rev-parse --short HEAD)
-        docker tag node-app:$IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/node-app:$IMAGE_TAG
-        docker push ${{ secrets.DOCKER_USERNAME }}/node-app:$IMAGE_TAG
+        $env:IMAGE_TAG=$(git rev-parse --short HEAD)
+        docker tag node-app:$env:IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/node-app:$env:IMAGE_TAG
+        docker push ${{ secrets.DOCKER_USERNAME }}/node-app:$env:IMAGE_TAG
 
     - name: Set up kubectl
       run: |
         echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
-        export KUBECONFIG=$(pwd)/kubeconfig.yaml
+        $env:KUBECONFIG=$(pwd)/kubeconfig.yaml
         kubectl version --client
 
     - name: Update Kubernetes Deployment
       run: |
-        IMAGE_TAG=$(git rev-parse --short HEAD)
-        kubectl set image deployment/node-app-deployment node-app=${{ secrets.DOCKER_USERNAME }}/node-app:$IMAGE_TAG
+        $env:IMAGE_TAG=$(git rev-parse --short HEAD)
+        kubectl set image deployment/node-app-deployment node-app=${{ secrets.DOCKER_USERNAME }}/node-app:$env:IMAGE_TAG
 
     - name: Verify deployment
       run: |
